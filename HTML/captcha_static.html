@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF8">
+  <title>CAPTCHA Example</title>
+
+  <script type="text/javascript">
+    const digits = [
+      0,1,1,1,0,
+      1,0,0,1,1,
+      1,0,0,1,1,
+      1,0,0,1,1,
+      1,0,0,1,1,
+      1,0,0,1,1,
+      0,1,1,1,0,
+
+      0,0,1,0,0,
+      0,1,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      0,0,0,0,1,
+      0,0,0,1,0,
+      0,1,1,0,0,
+      1,0,0,0,0,
+      1,1,1,1,1,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      0,0,0,0,1,
+      0,0,1,1,0,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,0,0,1,0,
+      0,0,1,1,0,
+      0,1,0,1,0,
+      1,0,0,1,0,
+      1,1,1,1,1,
+      0,0,0,1,0,
+      0,0,0,1,0,
+
+      1,1,1,1,1,
+      1,0,0,0,0,
+      1,1,1,1,0,
+      0,0,0,0,1,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,0,
+      1,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      1,1,1,1,1,
+      0,0,0,0,1,
+      0,0,0,0,1,
+      0,0,0,1,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,1,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0
+    ];
+	
+	const FRAMES_PER_SECOND = 60;
+    const FRAME_MIN_TIME = (1000/60) * (60 / FRAMES_PER_SECOND) - (1000/60) * 0.5;
+    var lastFrameTime = 0;  // the last frame time
+	var renderCounter = 0;
+	var randDigit = Array(5);
+
+    function randomInt(max) {
+		return Math.floor(Math.random()*(max + 1));
+    }
+
+    function onReady(isGenDigit) {
+		var cvs = document.getElementById("rscaptcha");
+		var ctx = cvs.getContext("2d");
+		var cvsBuffer = document.createElement('canvas');
+		var ctxBuffer = cvsBuffer.getContext('2d');
+		var r, g, b;
+	  
+		if (isGenDigit) {
+			for (var i=0; i<5; i++)
+				randDigit[i] = randomInt(9);
+		}
+		
+		ctxBuffer.canvas.width = cvs.width;
+		ctxBuffer.canvas.height = cvs.height;
+
+		function drawDigit(context, pos, d) {
+			for (var x=0; x<5; x++ ) {
+				for (var y=0; y<7; y++) {
+					if (digits[d*5*7+y*5+x]) {
+						context.fillStyle = "rgb(0, 255, 0)";
+						xx = 6 + pos*5*6 + x*5
+						yy = 6 + y*5
+						context.beginPath();
+						context.rect(xx, yy, 5, 5);
+						context.fill()
+						context.stroke();
+					}
+				}
+			}
+		}
+	  
+		function render() {
+			renderCounter++;
+			ctxBuffer.beginPath();
+			ctxBuffer.rect(0, 0, cvs.width, cvs.height);
+			ctxBuffer.fillStyle = "black";
+			ctxBuffer.fill();
+			ctxBuffer.closePath();
+
+			ctx.beginPath();
+			ctx.rect(0, 0, cvs.width, cvs.height);
+			ctx.fillStyle = "black";
+			ctx.fill();
+			ctx.closePath();
+			
+			for (var i=0; i<5; i++)
+				drawDigit(ctxBuffer, i, randDigit[i]);
+			
+			if (renderCounter > ctxBuffer.canvas.width*2)
+				renderCounter = 0;
+			ctx.drawImage(cvsBuffer, 0, 0);
+		}
+	  
+		function drawIt(timestamp) {
+			if(timestamp-lastFrameTime < FRAME_MIN_TIME){
+				requestAnimationFrame(drawIt);
+				return;
+			}
+			lastFrameTime = timestamp;
+
+			render();
+			window.requestAnimationFrame(drawIt);
+		}
+
+		render();
+		window.requestAnimationFrame(drawIt);
+	  
+    }
+	
+	var img_count = 1;
+
+    function toImage(isGenDigit){
+		onReady(isGenDigit);
+		downlink.download = randDigit.join('');
+        var canvas = document.getElementById("rscaptcha");
+        var myImage = document.getElementById('myImage');
+		 
+        myImage.src = canvas.toDataURL();
+		console.log('OK');
+    }
+	
+	function genImages() {
+		toImage(true)
+		downlink.href = myImage.src;
+		
+		downlink.click();
+			
+		if (genImages.count++ <150) {
+			window.setTimeout(genImages, 50);
+		}
+	}
+	genImages.count = 1;
+	
+	
+  </script>
+</head>
+<body onload="onReady(true);">
+  <canvas id="rscaptcha" width="157" height="47"></canvas>
+  <div name='digit' id='digit'></div><br/>
+  <button onclick="toImage(false);">Capture</button>
+  <button onclick="genImages();">Gen Images</button><br/>
+  <a href='' id='downlink' download>Download</a>
+  <div></div>
+  <img id="myImage">
+</body>
+</html>

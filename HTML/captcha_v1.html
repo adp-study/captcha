@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF8">
+  <title>CAPTCHA Example</title>
+
+  <script type="text/javascript">
+    const digits = [
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,0,1,0,0,
+      0,1,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      0,0,0,0,1,
+      0,0,0,1,0,
+      0,1,1,0,0,
+      1,0,0,0,0,
+      1,1,1,1,1,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      0,0,0,0,1,
+      0,0,1,1,0,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,0,0,1,0,
+      0,0,1,1,0,
+      0,1,0,1,0,
+      1,0,0,1,0,
+      1,1,1,1,1,
+      0,0,0,1,0,
+      0,0,0,1,0,
+
+      1,1,1,1,1,
+      1,0,0,0,0,
+      1,1,1,1,0,
+      0,0,0,0,1,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,0,
+      1,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      1,1,1,1,1,
+      0,0,0,0,1,
+      0,0,0,0,1,
+      0,0,0,1,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+      0,0,1,0,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0,
+
+      0,1,1,1,0,
+      1,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,1,
+      0,0,0,0,1,
+      1,0,0,0,1,
+      0,1,1,1,0
+    ];
+
+    function toImage(){
+        var canvas = document.getElementById("rscaptcha");
+        var myImage = document.getElementById('myImage');
+        myImage.src = canvas.toDataURL();
+    }
+
+    const FRAMES_PER_SECOND = 60;
+    const FRAME_MIN_TIME = (1000/60) * (60 / FRAMES_PER_SECOND) - (1000/60) * 0.5;
+    var lastFrameTime = 0;  // the last frame time
+
+    function randomInt(max) {
+      return Math.floor(Math.random()*(max + 1));
+    }
+
+    var cvsBuffer = document.createElement('canvas');
+    var ctxBuffer = cvsBuffer.getContext('2d');
+    var randDigit = Array(5);
+
+    for (var i=0; i<5; i++)
+      randDigit[i] = randomInt(9);
+
+    function drawDigit(ctx, pos, d, rgb) {
+      for (var x=0; x<5; x++ ) {
+        for (var y=0; y<7; y++) {
+          if (randomInt(2) == 0 && digits[d*5*7+y*5+x]) {
+            rgb[0] = randomInt(128)+128;
+            rgb[1] = randomInt(128)+128;
+            rgb[2] = randomInt(128)+128;
+            ctx.fillStyle = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+            xx = 6 + pos*5*6 + x*5
+            yy = 6 + y*5
+            ctx.beginPath();
+            ctx.rect(xx, yy, 5, 5);
+            ctx.fill()
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function onReady() {
+      var cvs = document.getElementById("rscaptcha");
+      var ctx = cvs.getContext("2d");
+      var cvsBuffer = document.createElement('canvas');
+      var ctxBuffer = cvsBuffer.getContext('2d');
+      var r, g, b;
+
+      ctxBuffer.canvas.width = cvs.width;
+      ctxBuffer.canvas.height = cvs.height;
+
+      var rgb = [randomInt(255), randomInt(255), randomInt(255)]
+
+      function drawIt(timestamp) {
+        if(timestamp-lastFrameTime < FRAME_MIN_TIME){
+          requestAnimationFrame(drawIt);
+          return;
+        }
+        lastFrameTime = timestamp;
+
+        if( typeof drawIt.counter == 'undefined' ) {
+          drawIt.counter = 0;
+        }
+        drawIt.counter++;
+
+        ctxBuffer.beginPath();
+        ctxBuffer.rect(0, 0, cvs.width, cvs.height);
+        ctxBuffer.fillStyle = "black";
+        ctxBuffer.fill();
+        ctxBuffer.closePath();
+
+        for (var i=0; i<5; i++)
+          drawDigit(ctxBuffer, i, randDigit[i], rgb);
+
+        for( var x = 1; x < cvs.width; x+= 5 ) {
+          for( var y = 1; y < cvs.height; y+= 5) {
+            if (randomInt(20) == 0) {
+              r = randomInt(256)
+              g = randomInt(256)
+              b = randomInt(256)
+              ctxBuffer.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+              ctxBuffer.beginPath();
+              ctxBuffer.rect(x, y, 5, 5);
+              ctxBuffer.fill()
+              ctxBuffer.stroke();
+            }
+
+          }
+        }
+
+        if (drawIt.counter > 10) {
+          drawIt.counter = 0;
+          rgb[0] = randomInt(128)+128;
+          rgb[1] = randomInt(128)+128;
+          rgb[2] = randomInt(128)+128;
+        }
+
+        // ctx.putImageData(image, 128-drawIt.counter%256, 0);
+        // ctx.putImageData(image, 0, 0);
+        ctx.drawImage(cvsBuffer, 0, 0);
+        window.requestAnimationFrame(drawIt);
+      }
+
+      window.requestAnimationFrame(drawIt);
+  }
+  </script>
+</head>
+<body onload="onReady();">
+  <canvas id="rscaptcha" width="157" height="47"></canvas>
+  <div name='digit' id='digit'></div>
+  <button onclick="toImage();">Capture</button>
+  <div></div>
+  <img id="myImage">
+</body>
+</html>
