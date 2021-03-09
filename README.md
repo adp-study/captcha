@@ -1,3 +1,3 @@
 # A Robust CAPTCHA
 
-## Author: Shin Ryu
+## Author: Shin Ryu# CAPTCHA
